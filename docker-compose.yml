@@ -32,6 +32,8 @@ services:
           - INSTALL_DEPLOYER=${WORKSPACE_INSTALL_DEPLOYER}
           - INSTALL_LINUXBREW=${WORKSPACE_INSTALL_LINUXBREW}
           - INSTALL_MC=${WORKSPACE_INSTALL_MC}
+          - INSTALL_SYMFONY=${WORKSPACE_INSTALL_SYMFONY}
+          - INSTALL_PYTHON=${WORKSPACE_INSTALL_PYTHON}
           - INSTALL_IMAGE_OPTIMIZERS=${WORKSPACE_INSTALL_IMAGE_OPTIMIZERS}
           - PUID=${WORKSPACE_PUID}
           - PGID=${WORKSPACE_PGID}
@@ -109,13 +111,14 @@ services:
       networks:
         - backend
 
-### Nginx Server Container ##################################
+### NGINX Server Container ##################################
 
     nginx:
       build:
         context: ./nginx
         args:
-          - PHP_UPSTREAM=php-fpm
+          - PHP_UPSTREAM_CONTAINER=${NGINX_PHP_UPSTREAM_CONTAINER}
+          - PHP_UPSTREAM_PORT=${NGINX_PHP_UPSTREAM_PORT}
       volumes_from:
         - applications
       volumes:
@@ -148,7 +151,8 @@ services:
       build:
         context: ./apache2
         args:
-          - PHP_SOCKET=${PHP_SOCKET}
+          - PHP_UPSTREAM_CONTAINER=${APACHE_PHP_UPSTREAM_CONTAINER}
+          - PHP_UPSTREAM_PORT=${APACHE_PHP_UPSTREAM_PORT}
       volumes_from:
         - applications
       volumes:
@@ -196,6 +200,8 @@ services:
     mysql:
       build:
         context: ./mysql
+        args:
+          - MYSQL_VERSION=${MYSQL_VERSION}
       environment:
         - MYSQL_DATABASE=${MYSQL_DATABASE}
         - MYSQL_USER=${MYSQL_USER}
@@ -334,7 +340,7 @@ services:
       volumes:
         - ${DATA_SAVE_PATH}/redis:/data
       ports:
-        - "6379:6379"
+        - "${REDIS_PORT}:6379"
       networks:
         - backend
 
@@ -464,11 +470,14 @@ services:
       build: ./pgadmin
       ports:
         - "5050:5050"
+      volumes:
+        - ${DATA_SAVE_PATH}/pgadmin-backup:/var/lib/pgadmin4/data/storage/pgadmin4
       depends_on:
         - postgres
       networks:
         - frontend
         - backend
+      
 
 ### ElasticSearch Container #################################
 
