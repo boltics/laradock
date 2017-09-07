@@ -11,6 +11,8 @@ FROM nielsvdoorn/laravel-supervisor
 
 MAINTAINER Mahmoud Zalt <mahmoud@zalt.me>
 
+RUN docker-php-ext-install pcntl
+
 #
 #--------------------------------------------------------------------------
 # Optional Supervisord Configuration
