@@ -235,6 +235,7 @@ services:
       volumes:
         - ${DATA_SAVE_PATH}/mysql:/var/lib/mysql
         - ${MYSQL_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
+        - ${MYSQL_LOG_PATH}:/var/log/mysql/
       ports:
         - "${MYSQL_PORT}:3306"
       networks:
@@ -281,6 +282,7 @@ services:
       volumes:
         - ${DATA_SAVE_PATH}/mariadb:/var/lib/mysql
         - ${MARIADB_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
+        - ${MARIADB_LOG_PATH}:/var/log/mysql/
       ports:
         - "${MARIADB_PORT}:3306"
       environment:
@@ -680,7 +682,7 @@ services:
       networks:
         - frontend
         - backend
-        
+
 ### Solr Container #########################################
 
     solr:
