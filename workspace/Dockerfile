@@ -246,6 +246,20 @@ RUN sed -i "s/xdebug.remote_autostart=0/xdebug.remote_autostart=1/" /etc/php/${P
     sed -i "s/xdebug.cli_color=0/xdebug.cli_color=1/" /etc/php/${PHP_VERSION}/cli/conf.d/xdebug.ini
 
 ###########################################################################
+# Phpdbg:
+###########################################################################
+
+USER root
+
+ARG INSTALL_PHPDBG=false
+ARG PHP_VERSION=${PHP_VERSION}
+
+RUN if [ ${INSTALL_PHPDBG} = true ]; then \
+    # Load the xdebug extension only with phpunit commands
+    apt-get install -y --force-yes php${PHP_VERSION}-phpdbg \
+;fi
+
+###########################################################################
 # Blackfire:
 ###########################################################################
 
@@ -292,7 +306,12 @@ ARG PHP_VERSION=${PHP_VERSION}
 
 RUN if [ ${INSTALL_MONGO} = true ]; then \
     # Install the mongodb extension
-    pecl -q install mongodb && \
+    if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
+      pecl install mongo && \
+      echo "extension=mongo.so" >> /etc/php/${PHP_VERSION}/mods-available/mongo.ini && \
+      ln -s /etc/php/${PHP_VERSION}/mods-available/mongo.ini /etc/php/${PHP_VERSION}/cli/conf.d/30-mongo.ini \
+    ;fi && \
+    pecl install mongodb && \
     echo "extension=mongodb.so" >> /etc/php/${PHP_VERSION}/mods-available/mongodb.ini && \
     ln -s /etc/php/${PHP_VERSION}/mods-available/mongodb.ini /etc/php/${PHP_VERSION}/cli/conf.d/30-mongodb.ini \
 ;fi
@@ -348,6 +367,17 @@ RUN if [ ${INSTALL_SWOOLE} = true ]; then \
 ;fi
 
 ###########################################################################
+# Libpng16 EXTENSION
+###########################################################################
+
+ARG INSTALL_LIBPNG=false
+
+RUN if [ ${INSTALL_LIBPNG} = true ]; then \
+    apt update && \
+    apt install libpng16-16 \
+;fi
+
+###########################################################################
 # Drupal Console:
 ###########################################################################
 
@@ -369,7 +399,7 @@ USER laradock
 ###########################################################################
 
 # Check if NVM needs to be installed
-ARG NODE_VERSION=stable
+ARG NODE_VERSION=node
 ENV NODE_VERSION ${NODE_VERSION}
 ARG INSTALL_NODE=false
 ARG INSTALL_NPM_GULP=false
@@ -396,7 +426,7 @@ RUN if [ ${INSTALL_NODE} = true ]; then \
         npm install -g bower \
         ;fi \
         && if [ ${INSTALL_NPM_VUE_CLI} = true ]; then \
-        npm install -g vue-cli \
+        npm install -g @vue/cli \
         ;fi \
 ;fi
 
@@ -661,7 +691,7 @@ ARG INSTALL_IMAGE_OPTIMIZERS=false
 RUN if [ ${INSTALL_IMAGE_OPTIMIZERS} = true ]; then \
     apt-get install -y jpegoptim optipng pngquant gifsicle && \
     if [ ${INSTALL_NODE} = true ]; then \
-        . ~/.bashrc && npm install -g svgo \
+        exec bash && . ~/.bashrc && npm install -g svgo \
     ;fi\
 ;fi
 
